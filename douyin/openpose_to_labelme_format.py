@@ -102,12 +102,12 @@ def openpose_convert_labelme_format(input_json, input_image_path=None, output_di
 if __name__ == '__main__':
     args = parseArgs()
 
-    args.images_path = "/media/jion/D/chenhaoming/DataSet/DouYin/images/dance/{0:06d}".format(1)
-    args.output_dir = "/media/jion/D/chenhaoming/DataSet/DouYin/images/dance/{0:06d}".format(1)
-    images_paths = utils_io_folder.get_immediate_childfile_paths(args.images_path, exclude=".json")
-    intput_jsons = utils_io_folder.get_immediate_childfile_paths(os.path.join(args.images_path, "openpose"),
-                                                                 ext=".json")
-    assert len(images_paths) == len(intput_jsons)
-    for index in tqdm(range(len(images_paths))):
-        openpose_convert_labelme_format(intput_jsons[index], images_paths[index], args.output_dir)
-
+    for i in tqdm(range(1, 36)):
+        args.images_path = "/media/jion/D/chenhaoming/DataSet/DouYin/images/dance/{0:06d}".format(i)
+        args.output_dir = "/media/jion/D/chenhaoming/DataSet/DouYin/images/dance/{0:06d}".format(i)
+        images_paths = utils_io_folder.get_immediate_childfile_paths(args.images_path, exclude=".json")
+        intput_jsons = utils_io_folder.get_immediate_childfile_paths(os.path.join(args.images_path, "openpose"),
+                                                                     ext=".json")
+        assert len(images_paths) == len(intput_jsons)
+        for index in range(len(images_paths)):
+            openpose_convert_labelme_format(intput_jsons[index], images_paths[index], args.output_dir)
