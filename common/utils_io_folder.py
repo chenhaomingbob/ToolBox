@@ -30,6 +30,8 @@ def get_immediate_childfile_paths(folder_path, ext=None, exclude=None):
     return files_full_paths
 
 
+
+
 def get_immediate_childfile_names(folder_path, ext=None, exclude=None):
     files_names = [file_name for file_name in next(os.walk(folder_path))[2]]
     if ext is not None:
@@ -78,6 +80,10 @@ def create_folder(folder_path):
         os.makedirs(folder_path)
 
 
+def folder_exists(folder_path):
+    return os.path.exists(folder_path)
+
+
 def rename_filename_concation_openSVAI(filename):
     new_filename = filename.replace("_OpenSVAI", "")
     os.rename(filename, new_filename)
@@ -85,6 +91,7 @@ def rename_filename_concation_openSVAI(filename):
 
 
 if __name__ == '__main__':
+
     path = "/media/jion/D/chenhaoming/experiment/contrast/exp_lighttrack_official_CPN101_posetrack18_val_gt_interval_3/jsons"
     for filepath in get_immediate_childfile_paths(path):
         rename_filename_concation_openSVAI(filepath)

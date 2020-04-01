@@ -12,9 +12,21 @@ import PIL.Image
 import io
 from common import utils_image
 import logger
+import json
+import numpy as np
 
 
-class Labelme_JSON(object):
+class Labelme_JSON(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(Labelme_JSON, self).default(obj)
+
     def __init__(self):
         self.version = "4.2.9"
         self.flags = {}
