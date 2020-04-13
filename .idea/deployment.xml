@@ -5,7 +5,7 @@
       <paths name="jion@1.tcp.cpolar.cn:20279">
         <serverdata>
           <mappings>
-            <mapping deploy="/media/jion/D/chenhaoming/Code/ToolBox" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/media/jion/D/chenhaoming/Code/ToolBox" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>

@@ -8,7 +8,7 @@
 """
 
 import os
-from utils_natural_sort import natural_sort
+from common.utils_natural_sort import natural_sort
 
 
 def get_immediate_subfolder_paths(folder_path):

@@ -5,6 +5,7 @@
       <w>keypoints</w>
       <w>labelme</w>
       <w>lightrack</w>
+      <w>openpose</w>
       <w>xywh</w>
     </words>
   </dictionary>

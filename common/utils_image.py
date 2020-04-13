@@ -18,7 +18,7 @@ import PIL.ImageOps
 import os
 import cv2
 import numpy as np
-import utils_io_folder
+from common import utils_io_folder
 from tqdm import tqdm
 
 
@@ -196,15 +196,4 @@ def make_images_from_video(video_path, outimages_path=None):
         if flag:  # 读取成功的话
             # 写入文件，1 文件名 2 文件内容 3 质量设置
             cv2.imwrite(file_path, data, [cv2.IMWRITE_JPEG_QUALITY, 100])
-        # while (isOpened):  # 当视频被打开了
-        #     i = i + 1  # i++
-        #     (flag, frame) = cap.read()  # 读取每一张 flag<读取是否成功> frame<内容>
-        #     file_name = "{0:08d}.jpg".format(i)
-        #     if outimages_path is not None:
-        #         file_path = os.path.join(outimages_path, file_name)
-        #     else:
-        #         utils_io_folder.create_folder("output")
-        #         file_path = os.path.join("output", file_name)
-        #     if flag:  # 读取成功的话
-        #         # 写入文件，1 文件名 2 文件内容 3 质量设置
-        #         cv2.imwrite(file_path, frame, [cv2.IMWRITE_JPEG_QUALITY, 100])
+

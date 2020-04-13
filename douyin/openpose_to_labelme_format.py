@@ -7,6 +7,9 @@
     Description: OpenSVAI format convert to labelme format
 """
 import os
+import sys
+
+sys.path.append(os.path.abspath("../common"))
 import numpy
 import json
 from common import utils_image, utils_bbox, utils_json, utils_io_folder
@@ -15,10 +18,11 @@ from data_format.openpose import OpenPose_JSON
 from data_format.labelme import Labelme_JSON
 import argparse
 from tqdm import tqdm
+from batch.config import video_types
 
 # openSVAI  keypoints order (same as PoseTrack)
 # 0-right ankle 1-right knee ....
-pose_keypoints_order = ["Nose", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder ankle", "LElbow",
+pose_keypoints_order = ["Nose", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder", "LElbow",
                         "LWrist", "MidHip", "RHip", "RKnee", "RAnkle", "LHip", "LKnee", "LAnkle", "REye", "LEye",
                         "REar", "LEar", "LBigToe", "LSmallToe", "LHeel", "RBigToe", "RSmallToe", "RHeel"
                         ]
@@ -29,6 +33,7 @@ hand_keypoints_order = ["{}hand_keypoint_0", "{}hand_keypoint_1", "{}hand_keypoi
                         "{}hand_keypoint_12", "{}hand_keypoint_13", "{}hand_keypoint_14",
                         "{}hand_keypoint_15", "{}hand_keypoint_16", "{}hand_keypoint_17",
                         "{}hand_keypoint_18", "{}hand_keypoint_19", "{}hand_keypoint_20", ]
+hand_keep_point = [0, 1, 4, 5, 8, 9, 12, 13, 16, 17, 20]
 pose_keypoints_number = len(pose_keypoints_order)
 hand_keypoints_number = len(hand_keypoints_order)
 
@@ -72,9 +77,10 @@ def openpose_convert_labelme_format(input_json, input_image_path=None, output_di
     openPose_object = OpenPose_JSON(input_json)
     labelme_object = Labelme_JSON()
     image_name = utils_io_folder.get_file_name_from_path(input_image_path)  # like 00000001.jpg
-    labelme_object.imagePath = input_image_path
-    labelme_object.imageData = utils_image.img_encode_to_base64(labelme_object.imagePath)
-    image_arr = utils_image.img_b64_to_arr(labelme_object.imageData)
+    labelme_object.imagePath = ""
+    # labelme_object.imageData = ""
+    labelme_object.imageData = utils_image.img_encode_to_base64(input_image_path)
+    image_arr = utils_image.img_b64_to_arr(utils_image.img_encode_to_base64(input_image_path))
     labelme_object.imageHeight, labelme_object.imageWidth = image_arr.shape[0], image_arr.shape[1]
 
     for person in openPose_object.people:
@@ -85,9 +91,13 @@ def openpose_convert_labelme_format(input_json, input_image_path=None, output_di
         for index, keypoint in enumerate(pose_keypoints_2d):
             labelme_object.shapes.append(point_shape(track_id, pose_keypoints_order[index], keypoint))
         for index, keypoint in enumerate(hand_left_keypoints_2d):
-            labelme_object.shapes.append(point_shape(track_id, hand_keypoints_order[index].format("left_"), keypoint))
+            if index in hand_keep_point:
+                labelme_object.shapes.append(
+                    point_shape(track_id, hand_keypoints_order[index].format("left_"), keypoint))
         for index, keypoint in enumerate(hand_right_keypoints_2d):
-            labelme_object.shapes.append(point_shape(track_id, hand_keypoints_order[index].format("right_"), keypoint))
+            if index in hand_keep_point:
+                labelme_object.shapes.append(
+                    point_shape(track_id, hand_keypoints_order[index].format("right_"), keypoint))
     if output_dir is None:
         # 输出 默认在input_json的路径下创建labelme文件夹。
         output_dir = os.path.join(utils_io_folder.get_parent_folder_from_path(input_json))
@@ -99,15 +109,90 @@ def openpose_convert_labelme_format(input_json, input_image_path=None, output_di
     utils_json.write_json_to_file(labelme_object.to_dict(), output_path)
 
 
+def generate_one_video(video_id, type=None):
+    args.images_path = "F:/DataSet/douyin/images/dance/{0:06d}".format(video_id)
+    args.output_dir = "F:/DataSet/douyin/trial/dance/{0:06d}".format(video_id)
+    args.openpose_dir = "F:/DataSet/douyin/openpose/dance/{0:06d}".format(video_id)
+    images_paths = utils_io_folder.get_immediate_childfile_paths(args.images_path, exclude=".json")
+    input_jsons = utils_io_folder.get_immediate_childfile_paths(os.path.join(args.openpose_dir), ext=".json")
+    assert len(images_paths) == len(input_jsons)
+    print("args.images_path:{}".format(args.images_path))
+    for index in range(len(images_paths)):
+        openpose_convert_labelme_format(input_jsons[index], images_paths[index], args.output_dir)
+
+
+def generate_all_video(type):
+    assert type in video_types
+    "machine_openpose"
+    "/media/jion/D/chenhaoming/DataSet/DouYin/machine_openpose/KongFu/000001"
+    image_folder_base = "/media/jion/D/chenhaoming/DataSet/DouYin/images/{}".format(type)
+    openpose_dir_base = "/media/jion/D/chenhaoming/DataSet/DouYin/machine_openpose/{}".format(type)
+    output_dir_base = "/media/jion/D/chenhaoming/DataSet/DouYin/images/{}".format(type)
+
+    images_folder_paths = utils_io_folder.get_immediate_subfolder_paths(image_folder_base)
+    for image_folder_path in images_folder_paths:
+        images_paths = utils_io_folder.get_immediate_childfile_paths(image_folder_path, exclude=".json")
+        video_name = utils_io_folder.get_file_name_without_ext_from_path(image_folder_path)
+        input_jsons = utils_io_folder.get_immediate_childfile_paths(os.path.join(openpose_dir_base, video_name),
+                                                                    ext=".json")
+        output_dir = os.path.join(output_dir_base, video_name)
+        assert len(images_paths) == len(input_jsons)
+        print("images_path:{}".format(image_folder_path))
+        for index in range(len(images_paths)):
+            openpose_convert_labelme_format(input_jsons[index], images_paths[index], output_dir)
+    # if type == "dance":
+    #     #     for video_id in tqdm(range(1, 36)):
+    #     #         args.images_path = "F:/DataSet/douyin/images/dance/{0:06d}".format(video_id)
+    #     #         args.output_dir = "F:/DataSet/douyin/trial/dance/{0:06d}".format(video_id)
+    #     #         args.openpose_dir = "F:/DataSet/douyin/openpose/dance/{0:06d}".format(video_id)
+    #     #         if not utils_io_folder.folder_exists(args.images_path):
+    #     #             continue
+    #     #         images_paths = utils_io_folder.get_immediate_childfile_paths(args.images_path, exclude=".json")
+    #     #         input_jsons = utils_io_folder.get_immediate_childfile_paths(os.path.join(args.openpose_dir), ext=".json")
+    #     #         assert len(images_paths) == len(input_jsons)
+    #     #         print("args.images_path:{}".format(args.images_path))
+    #     #         for index in range(len(images_paths)):
+    #     #             openpose_convert_labelme_format(input_jsons[index], images_paths[index], args.output_dir)
+    #     # elif type == "fitness":
+    #     #     for video_id in tqdm(range(1, 8)):
+    #     #         args.images_path = "/media/jion/D/chenhaoming/DataSet/DouYin/images/fitness/{0:06d}".format(video_id)
+    #     #         args.openpose_dir = "/media/jion/D/chenhaoming/DataSet/DouYin/openpose_json/fitness/{0:06d}".format(
+    #     #             video_id)
+    #     #         args.output_dir = "/media/jion/D/chenhaoming/DataSet/DouYin/images/fitness/{0:06d}".format(video_id)
+    #     #         if not utils_io_folder.folder_exists(args.images_path):
+    #     #             continue
+    #     #         images_paths = utils_io_folder.get_immediate_childfile_paths(args.images_path, exclude=".json")
+    #     #         input_jsons = utils_io_folder.get_immediate_childfile_paths(os.path.join(args.openpose_dir), ext=".json")
+    #     #         assert len(images_paths) == len(input_jsons)
+    #     #         print("args.images_path:{}".format(args.images_path))
+    #     #         for index in range(len(images_paths)):
+    #     #             openpose_convert_labelme_format(input_jsons[index], images_paths[index], args.output_dir)
+
+
+# def generate_all_video():
+#     platforms = ["ubuntu", "windows"]
+#     platform = platforms[1]
+#     for i in tqdm(range(1, 36)):
+#         if platform == "ubuntu":
+#             args.images_path = "/media/jion/D/chenhaoming/DataSet/DouYin/images/dance/{0:06d}".format(i)
+#             args.output_dir = "/media/jion/D/chenhaoming/DataSet/DouYin/images/dance/{0:06d}".format(i)
+#
+#         else:
+#             args.images_path = "F:/DataSet/douyin/images/dance/{0:06d}".format(i)
+#             args.output_dir = "F:/DataSet/douyin/images/dance/{0:06d}".format(i)
+#             args.openpose_dir = "F:/DataSet/douyin/openpose/dance/{0:06d}".format(i)
+#         if not utils_io_folder.folder_exists(args.images_path):
+#             continue
+#         images_paths = utils_io_folder.get_immediate_childfile_paths(args.images_path, exclude=".json")
+#         input_jsons = utils_io_folder.get_immediate_childfile_paths(os.path.join(args.openpose_dir), ext=".json")
+#         assert len(images_paths) == len(input_jsons)
+#         print("args.images_path:{}".format(args.images_path))
+#         for index in range(len(images_paths)):
+#             openpose_convert_labelme_format(input_jsons[index], images_paths[index], args.output_dir)
+
+
 if __name__ == '__main__':
     args = parseArgs()
-
-    for i in tqdm(range(1, 36)):
-        args.images_path = "/media/jion/D/chenhaoming/DataSet/DouYin/images/dance/{0:06d}".format(i)
-        args.output_dir = "/media/jion/D/chenhaoming/DataSet/DouYin/images/dance/{0:06d}".format(i)
-        images_paths = utils_io_folder.get_immediate_childfile_paths(args.images_path, exclude=".json")
-        intput_jsons = utils_io_folder.get_immediate_childfile_paths(os.path.join(args.images_path, "openpose"),
-                                                                     ext=".json")
-        assert len(images_paths) == len(intput_jsons)
-        for index in range(len(images_paths)):
-            openpose_convert_labelme_format(intput_jsons[index], images_paths[index], args.output_dir)
+    # generate_all_video("fitness")
+    generate_all_video("hyj")
+    # test_one_video(16)

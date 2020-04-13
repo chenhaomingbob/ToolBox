@@ -3,7 +3,8 @@
 """
     Author: Haoming Chen
     E-mail: chenhaomingbob@163.com
-    Time: 2020/04/01
+    Time: 2020/04/08
     Description:
 """
-from common import utils_io_folder, utils_json
+
+video_types = ["dance", "fitness", "KongFu","hyj"]

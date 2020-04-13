@@ -17,6 +17,8 @@ keypoints_order = ["Nose", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder a
 
 import numpy
 
+thresold = 0.2
+
 
 class OpenPose_JSON(object):
 
@@ -46,6 +48,15 @@ class OpenPose_JSON(object):
             person["pose_keypoints_2d"] = numpy.array(raw_person["pose_keypoints_2d"]).reshape(-1, 3)
             person["hand_left_keypoints_2d"] = numpy.array(raw_person["hand_left_keypoints_2d"]).reshape(-1, 3)
             person["hand_right_keypoints_2d"] = numpy.array(raw_person["hand_right_keypoints_2d"]).reshape(-1, 3)
+            for i in range(len(person["pose_keypoints_2d"])):
+                if person["pose_keypoints_2d"][i][2] < thresold:
+                    person["pose_keypoints_2d"][i][0], person["pose_keypoints_2d"][i][1] = 0, 0
+            for i in range(len(person["hand_left_keypoints_2d"])):
+                if person["hand_left_keypoints_2d"][i][2] < thresold:
+                    person["hand_left_keypoints_2d"][i][0], person["hand_left_keypoints_2d"][i][1] = 0, 0
+            for i in range(len(person["hand_right_keypoints_2d"])):
+                if person["hand_right_keypoints_2d"][i][2] < thresold:
+                    person["hand_right_keypoints_2d"][i][0], person["hand_right_keypoints_2d"][i][1] = 0, 0
             self.people.append(person)
 
     def __len__(self):
