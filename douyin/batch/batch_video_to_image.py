@@ -19,7 +19,7 @@ def video_to_image(video_paths, outimages_paths):
         video_path = video_paths[video_index]
         outimages_path = outimages_paths[video_index]
         common.utils_image.make_images_from_video(video_path=video_path, outimages_path=outimages_path)
-        common.utils_io_folder.create_folder(os.path.join(outimages_path, "openpose"))
+        # common.utils_io_folder.create_folder(os.path.join(outimages_path, "openpose"))
         print("id:{},video_to_images Done!".format(video_path))
 
 
@@ -49,4 +49,12 @@ def start(type):
 
 if __name__ == '__main__':
     # start_2060("KongFu")
-    start("KongFu")
+
+    # for index, video_type in enumerate(video_types):
+    #
+    #     if index >= 4:
+    #         print(index, video_type)
+    #         start(video_type)
+    # start("Dance_single")
+    # start("Dance_multi")
+    start("other")

@@ -10,13 +10,12 @@ import os, sys
 
 sys.path.append(os.path.abspath("../common"))
 from common import utils_io_folder, utils_json
-
+from batch.config import video_types
 from tqdm import tqdm
 
 pose_keypoints_order = ["Nose", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder", "LElbow",
                         "LWrist", "MidHip", "RHip", "RKnee", "RAnkle", "LHip", "LKnee", "LAnkle", "REye", "LEye",
-                        "REar", "LEar", "LBigToe", "LSmallToe", "LHeel", "RBigToe", "RSmallToe", "RHeel"
-                        ]
+                        "REar", "LEar", "LBigToe", "LSmallToe", "LHeel", "RBigToe", "RSmallToe", "RHeel"]
 hand_keypoints_order = ["{}hand_keypoint_0", "{}hand_keypoint_1", "{}hand_keypoint_2",
                         "{}hand_keypoint_3", "{}hand_keypoint_4", "{}hand_keypoint_5",
                         "{}hand_keypoint_6", "{}hand_keypoint_7", "{}hand_keypoint_8",
@@ -84,40 +83,24 @@ def fill_keypoint(person_dict, shape):
             person_dict["pose_keypoints_2d"][label_index] = points[0]
             person_dict["pose_keypoints_2d"][label_index + 1] = points[1]
             person_dict["pose_keypoints_2d"][label_index + 2] = 1
-        else:
-            person_dict["pose_keypoints_2d"][label_index] = 0
-            person_dict["pose_keypoints_2d"][label_index + 1] = 0
-            person_dict["pose_keypoints_2d"][label_index + 2] = 0
     elif label in left_hand_keypoints_order:
         label_index = int(label[label.rindex("_") + 1:]) * 3
         if point_valid(points):
             person_dict["hand_left_keypoints_2d"][label_index] = points[0]
             person_dict["hand_left_keypoints_2d"][label_index + 1] = points[1]
             person_dict["hand_left_keypoints_2d"][label_index + 2] = 1
-        else:
-            person_dict["hand_left_keypoints_2d"][label_index] = 0
-            person_dict["hand_left_keypoints_2d"][label_index + 1] = 0
-            person_dict["hand_left_keypoints_2d"][label_index + 2] = 0
     elif label in right_hand_keypoints_order:
         label_index = int(label[label.rindex("_") + 1:]) * 3
         if point_valid(points):
             person_dict["hand_right_keypoints_2d"][label_index] = points[0]
             person_dict["hand_right_keypoints_2d"][label_index + 1] = points[1]
             person_dict["hand_right_keypoints_2d"][label_index + 2] = 1
-        else:
-            person_dict["hand_right_keypoints_2d"][label_index] = 0
-            person_dict["hand_right_keypoints_2d"][label_index + 1] = 0
-            person_dict["hand_right_keypoints_2d"][label_index + 2] = 0
     elif label == "LShoulder ankle":
-        label_index = 5
+        label_index = 5 * 3
         if point_valid(points):
             person_dict["pose_keypoints_2d"][label_index] = points[0]
             person_dict["pose_keypoints_2d"][label_index + 1] = points[1]
             person_dict["pose_keypoints_2d"][label_index + 2] = 1
-        else:
-            person_dict["pose_keypoints_2d"][label_index] = 0
-            person_dict["pose_keypoints_2d"][label_index + 1] = 0
-            person_dict["pose_keypoints_2d"][label_index + 2] = 0
     return person_dict
 
 
@@ -129,18 +112,22 @@ def point_valid(points):
 
 
 def start_convert():
-    labelme_base_path = "F:/DataSet/douyin/完成标注的/annotation/{}"
-    index = ["000003", "000004", "000005", "000009", "000011", "000012", "000013", "000014", "000016",
-             "000018", "000023", "000024"]
-    for i in tqdm(index):
-        path = labelme_base_path.format(i)
-        print(path)
-        labelme_json_paths = utils_io_folder.get_immediate_childfile_paths(path, ext="json")
-        # TODO  之后要改成在统一的一个目录下
-        output_folder = "F:/DataSet/douyin/完成标注的/annotation/To_openpose/dance/{}".format(i)
-        utils_io_folder.create_folder(output_folder)
-        for labelme_json_path in tqdm(labelme_json_paths):
-            labelme_to_openpose(labelme_json_path, output_folder)
+    labelme_base_path = "F:/DataSet/DouYin/annotation_labelme_image/{}"
+    output_base_path = "F:/DataSet/DouYin/annotation_openpose/{}"
+    for video_type in tqdm(video_types):
+        openpose_json_folder_type = output_base_path.format(video_type)
+        labelme_folder = labelme_base_path.format(video_type)
+
+        video_folder_sequence = utils_io_folder.get_immediate_subfolder_paths(labelme_folder)
+        for video_folder in tqdm(video_folder_sequence):
+            folder_name = utils_io_folder.get_file_name_without_ext_from_path(video_folder)
+            if folder_name.isdigit():
+                openpose_json_folder = os.path.join(openpose_json_folder_type, folder_name)
+                utils_io_folder.create_folder(openpose_json_folder)
+                labelme_json_paths = utils_io_folder.get_immediate_childfile_paths(video_folder, ext="json")
+                for labelme_json_path in tqdm(labelme_json_paths):
+                    # convert json one by one
+                    labelme_to_openpose(labelme_json_path, openpose_json_folder)
 
 
 if __name__ == '__main__':

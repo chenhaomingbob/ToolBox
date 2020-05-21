@@ -12,9 +12,9 @@ import sys
 print(sys.path)
 
 if __name__ == '__main__':
-    a = "/media/jion/D/chenhaoming/DataSet/DouYin/images/KongFu/{0:06d}.zip"
+    a = "/media/jion/D/chenhaoming/DataSet/DouYin/images/滑板/{0:06d}.zip"
     str1 = ""
-    for i in range(1, 41):
+    for i in range(1, 11):
         str1 = str1 + " " + a.format(i)
     print(str1)
     # folder = "F:/DataSet/douyin/images/dance"

@@ -73,7 +73,7 @@ def parseArgs():
     return parser.parse_args()
 
 
-def openpose_convert_labelme_format(input_json, input_image_path=None, output_dir=None):
+def openpose_convert_labelme_format(input_json, input_image_path=None, output_dir=None, only_pose=False):
     openPose_object = OpenPose_JSON(input_json)
     labelme_object = Labelme_JSON()
     image_name = utils_io_folder.get_file_name_from_path(input_image_path)  # like 00000001.jpg
@@ -88,16 +88,21 @@ def openpose_convert_labelme_format(input_json, input_image_path=None, output_di
         pose_keypoints_2d = person["pose_keypoints_2d"]
         hand_left_keypoints_2d = person["hand_left_keypoints_2d"]
         hand_right_keypoints_2d = person["hand_right_keypoints_2d"]
-        for index, keypoint in enumerate(pose_keypoints_2d):
-            labelme_object.shapes.append(point_shape(track_id, pose_keypoints_order[index], keypoint))
-        for index, keypoint in enumerate(hand_left_keypoints_2d):
-            if index in hand_keep_point:
-                labelme_object.shapes.append(
-                    point_shape(track_id, hand_keypoints_order[index].format("left_"), keypoint))
-        for index, keypoint in enumerate(hand_right_keypoints_2d):
-            if index in hand_keep_point:
-                labelme_object.shapes.append(
-                    point_shape(track_id, hand_keypoints_order[index].format("right_"), keypoint))
+
+        if only_pose:
+            for index, keypoint in enumerate(pose_keypoints_2d):
+                labelme_object.shapes.append(point_shape(track_id, pose_keypoints_order[index], keypoint))
+        else:
+            for index, keypoint in enumerate(pose_keypoints_2d):
+                labelme_object.shapes.append(point_shape(track_id, pose_keypoints_order[index], keypoint))
+            for index, keypoint in enumerate(hand_left_keypoints_2d):
+                if index in hand_keep_point:
+                    labelme_object.shapes.append(
+                        point_shape(track_id, hand_keypoints_order[index].format("left_"), keypoint))
+            for index, keypoint in enumerate(hand_right_keypoints_2d):
+                if index in hand_keep_point:
+                    labelme_object.shapes.append(
+                        point_shape(track_id, hand_keypoints_order[index].format("right_"), keypoint))
     if output_dir is None:
         # 输出 默认在input_json的路径下创建labelme文件夹。
         output_dir = os.path.join(utils_io_folder.get_parent_folder_from_path(input_json))
@@ -121,10 +126,8 @@ def generate_one_video(video_id, type=None):
         openpose_convert_labelme_format(input_jsons[index], images_paths[index], args.output_dir)
 
 
-def generate_all_video(type):
+def generate_all_video(type, only_pose=False):
     assert type in video_types
-    "machine_openpose"
-    "/media/jion/D/chenhaoming/DataSet/DouYin/machine_openpose/KongFu/000001"
     image_folder_base = "/media/jion/D/chenhaoming/DataSet/DouYin/images/{}".format(type)
     openpose_dir_base = "/media/jion/D/chenhaoming/DataSet/DouYin/machine_openpose/{}".format(type)
     output_dir_base = "/media/jion/D/chenhaoming/DataSet/DouYin/images/{}".format(type)
@@ -133,13 +136,21 @@ def generate_all_video(type):
     for image_folder_path in images_folder_paths:
         images_paths = utils_io_folder.get_immediate_childfile_paths(image_folder_path, exclude=".json")
         video_name = utils_io_folder.get_file_name_without_ext_from_path(image_folder_path)
+
+        if not video_name.isdigit():
+            continue
+
         input_jsons = utils_io_folder.get_immediate_childfile_paths(os.path.join(openpose_dir_base, video_name),
                                                                     ext=".json")
         output_dir = os.path.join(output_dir_base, video_name)
         assert len(images_paths) == len(input_jsons)
         print("images_path:{}".format(image_folder_path))
         for index in range(len(images_paths)):
-            openpose_convert_labelme_format(input_jsons[index], images_paths[index], output_dir)
+            if only_pose:
+                output_dir_final = os.path.join(output_dir, "only_pose")
+            else:
+                output_dir_final = os.path.join(output_dir, "pose_and_hand")
+            openpose_convert_labelme_format(input_jsons[index], images_paths[index], output_dir_final, only_pose=only_pose)
     # if type == "dance":
     #     #     for video_id in tqdm(range(1, 36)):
     #     #         args.images_path = "F:/DataSet/douyin/images/dance/{0:06d}".format(video_id)
@@ -194,5 +205,11 @@ def generate_all_video(type):
 if __name__ == '__main__':
     args = parseArgs()
     # generate_all_video("fitness")
-    generate_all_video("hyj")
+    generate_all_video("movie", only_pose=False)
+    generate_all_video("movie", only_pose=True)
+    # for index, video_type in enumerate(video_types):
+    #     if index>=9:
+    #         print(index,video_type)
+    #         generate_all_video(video_type, only_pose=False)
+    #         generate_all_video(video_type, only_pose=True)
     # test_one_video(16)
