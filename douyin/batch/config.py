@@ -8,4 +8,4 @@
 """
 
 video_types = ["Dance", "Fitness", "KongFu", "hyj", "武打", "滑板", "科幻", "跑酷", "演讲", "Dance_single", "Dance_multi",
-               "movie","other"]
+               "movie","other","extra"]

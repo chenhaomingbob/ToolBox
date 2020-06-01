@@ -130,5 +130,24 @@ def start_convert():
                     labelme_to_openpose(labelme_json_path, openpose_json_folder)
 
 
+def start_tmp():
+    labelme_base_path = "E:/temp/anno/{}"
+    output_base_path = "E:/temp/anno/output/{}"
+    temp_video_types = ["test", "train"]
+    for video_type in temp_video_types:
+        openpose_json_folder_type = output_base_path.format(video_type)
+        labelme_folder = labelme_base_path.format(video_type)
+
+        folder_name = utils_io_folder.get_file_name_without_ext_from_path(labelme_folder)
+
+        openpose_json_folder = os.path.join(openpose_json_folder_type, folder_name)
+        utils_io_folder.create_folder(openpose_json_folder)
+        labelme_json_paths = utils_io_folder.get_immediate_childfile_paths(labelme_folder, ext="json")
+        for labelme_json_path in tqdm(labelme_json_paths):
+            # convert json one by one
+            labelme_to_openpose(labelme_json_path, openpose_json_folder)
+
+
 if __name__ == '__main__':
-    start_convert()
+    # start_convert()
+    start_tmp()

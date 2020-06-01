@@ -205,8 +205,8 @@ def generate_all_video(type, only_pose=False):
 if __name__ == '__main__':
     args = parseArgs()
     # generate_all_video("fitness")
-    generate_all_video("movie", only_pose=False)
-    generate_all_video("movie", only_pose=True)
+    generate_all_video("extra", only_pose=False)
+    generate_all_video("extra", only_pose=True)
     # for index, video_type in enumerate(video_types):
     #     if index>=9:
     #         print(index,video_type)
